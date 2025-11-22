@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>WhiteStyles — Panel de gestión</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/styles.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Contenedor de notificaciones -->
+    <div id="notifications-container"></div>
+
+    <!-- Pantalla de login -->
+    <div id="login-screen" style="display:none">
+      <div class="container mt-5">
+        <div class="row justify-content-center">
+          <div class="col-md-5">
+            <div class="card shadow">
+              <div class="card-body">
+                <div class="text-center mb-4">
+                  <i class="fas fa-shopping-bag text-gradient" style="font-size: 3rem;"></i>
+                  <h3 class="mt-3">WhiteStyles</h3>
+                  <p class="text-muted">Sistema de Gestión</p>
+                </div>
+                <form id="login-form">
+                  <div class="mb-3">
+                    <label class="form-label">Usuario</label>
+                    <input type="text" class="form-control" id="login-username" placeholder="Ingresa tu usuario" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="login-password" placeholder="Ingresa tu contraseña" required>
+                  </div>
+                  <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                      <i class="fas fa-sign-in-alt me-1"></i>Ingresar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel principal -->
+    <div id="main-screen" style="display:none">
+      <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+          <span class="navbar-brand">
+            <i class="fas fa-shopping-bag me-2"></i>WhiteStyles
+          </span>
+          <div class="d-flex align-items-center">
+            <span class="navbar-text me-3" id="user-info">
+              <i class="fas fa-user-circle me-1"></i>
+            </span>
+            <button class="btn btn-outline-light btn-sm" id="logout-btn">
+              <i class="fas fa-sign-out-alt me-1"></i>Salir
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <div class="container-fluid">
+        <ul class="nav nav-tabs mb-3" role="tablist" id="main-tabs">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-productos">
+              <i class="fas fa-box me-2"></i>Productos
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-proveedores">
+              <i class="fas fa-truck me-2"></i>Proveedores
+            </button>
+          </li>
+          <li class="nav-item" id="tab-ventas-link">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ventas">
+              <i class="fas fa-cash-register me-2"></i>Ventas
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-alertas">
+              <i class="fas fa-bell me-2"></i>Alertas
+            </button>
+          </li>
+          <li class="nav-item" id="tab-reportes-link">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reportes">
+              <i class="fas fa-chart-line me-2"></i>Reportes
+            </button>
+          </li>
+          <li class="nav-item" id="tab-usuarios-link" style="display:none">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-usuarios">
+              <i class="fas fa-users-cog me-2"></i>Usuarios
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <!-- Tab Productos -->
+          <div class="tab-pane fade show active" id="tab-productos">
+            <div class="row">
+              <div class="col-md-8">
+                <h5><i class="fas fa-box me-2 text-primary"></i>Listado de Productos</h5>
+                <div class="table-responsive">
+                  <table class="table table-sm table-striped" id="productos-table">
+                    <thead class="sticky-top bg-white">
+                      <tr><th>#</th><th>Nombre</th><th>SKU</th><th>Talla</th><th>Color</th><th>Precio</th><th>Stock</th><th>Proveedor</th><th></th></tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <h5 id="producto-form-title"><i class="fas fa-plus-circle me-2 text-success"></i>Nuevo Producto</h5>
+                <form id="producto-form">
+                  <input type="hidden" id="id_producto">
+                  <div class="mb-2"><input id="nombre" class="form-control" placeholder="Nombre" required></div>
+                  <div class="mb-2"><input id="SKU" class="form-control" placeholder="SKU" required></div>
+                  <div class="mb-2"><input id="talla" class="form-control" placeholder="Talla" required></div>
+                  <div class="mb-2"><input id="color" class="form-control" placeholder="Color" required></div>
+                  <div class="mb-2"><input id="precio_venta" type="number" class="form-control" placeholder="Precio" required></div>
+                  <div class="mb-2"><input id="stock" type="number" class="form-control" placeholder="Stock" required></div>
+                  <div class="mb-2">
+                    <select id="id_proveedor" class="form-select" required>
+                      <option value="">Selecciona proveedor</option>
+                    </select>
+                  </div>
+                  <div class="d-flex">
+                    <button type="submit" class="btn btn-primary flex-grow-1">Guardar</button>
+                    <button type="button" class="btn btn-secondary btn-cancelar" id="producto-cancelar">Cancelar</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Proveedores -->
+          <div class="tab-pane fade" id="tab-proveedores">
+            <div class="row">
+              <div class="col-md-8">
+                <h5>Proveedores</h5>
+                <table class="table table-sm table-striped" id="proveedores-table">
+                  <thead>
+                    <tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th></th></tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="col-md-4">
+                <h5 id="proveedor-form-title">Nuevo Proveedor</h5>
+                <form id="proveedor-form">
+                  <input type="hidden" id="id_proveedor_edit">
+                  <div class="mb-2"><input id="prov-nombre" class="form-control" placeholder="Nombre" required></div>
+                  <div class="mb-2"><input id="prov-telefono" class="form-control" placeholder="Teléfono" required></div>
+                  <div class="mb-2"><input id="prov-email" type="email" class="form-control" placeholder="Email" required></div>
+                  <div class="d-flex">
+                    <button type="submit" class="btn btn-primary flex-grow-1">Guardar</button>
+                    <button type="button" class="btn btn-secondary btn-cancelar" id="proveedor-cancelar">Cancelar</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Ventas -->
+          <div class="tab-pane fade" id="tab-ventas">
+            <div class="row">
+              <div class="col-md-7">
+                <h5>Historial de Ventas</h5>
+                <div class="table-responsive">
+                  <table class="table table-sm table-striped" id="ventas-table">
+                    <thead class="sticky-top bg-white">
+                      <tr><th>#</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Método</th><th></th></tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="col-md-5">
+                <h5><i class="fas fa-plus-circle me-2 text-success"></i>Nueva Venta</h5>
+                <form id="venta-form">
+                  <div class="mb-3">
+                    <label class="form-label"><i class="fas fa-user me-1"></i>Cliente</label>
+                    <div class="input-group mb-2">
+                      <input id="venta-cliente-buscar" class="form-control" placeholder="RUT o Email del cliente">
+                      <button type="button" class="btn btn-primary" id="buscar-cliente"><i class="fas fa-search"></i></button>
+                      <button type="button" class="btn btn-success" id="nuevo-cliente"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div id="cliente-info-card" style="display:none" class="card bg-light">
+                      <div class="card-body p-2">
+                        <small>
+                          <strong id="cliente-info-nombre"></strong><br>
+                          <i class="fas fa-id-card me-1"></i><span id="cliente-info-rut"></span><br>
+                          <i class="fas fa-envelope me-1"></i><span id="cliente-info-email"></span><br>
+                          <i class="fas fa-phone me-1"></i><span id="cliente-info-telefono"></span>
+                        </small>
+                      </div>
+                    </div>
+                    <input type="hidden" id="venta-id-cliente">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label"><i class="fas fa-box me-1"></i>Productos</label>
+                    <button type="button" class="btn btn-outline-primary w-100 mb-2" id="agregar-producto-btn">
+                      <i class="fas fa-plus-circle me-1"></i>Agregar Producto
+                    </button>
+                    <div id="productos-venta"></div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label"><i class="fas fa-credit-card me-1"></i>Método de Pago</label>
+                    <select id="venta-metodo" class="form-select" required>
+                      <option value="">Seleccionar</option>
+                      <option value="efectivo">💵 Efectivo</option>
+                      <option value="tarjeta">💳 Tarjeta</option>
+                      <option value="transferencia">🏦 Transferencia</option>
+                    </select>
+                  </div>
+
+                  <div class="alert alert-info">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <strong>Total:</strong>
+                      <h4 class="mb-0">$<span id="venta-total">0</span></h4>
+                    </div>
+                  </div>
+
+                  <div class="d-grid">
+                    <button type="submit" class="btn btn-success btn-lg">
+                      <i class="fas fa-cash-register me-1"></i>Registrar Venta
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Alertas -->
+          <div class="tab-pane fade" id="tab-alertas">
+            <h5>Alertas de Stock Activas</h5>
+            <div id="alertas-list"></div>
+          </div>
+
+          <!-- Tab Reportes -->
+          <div class="tab-pane fade" id="tab-reportes">
+            <h5>Generación de Reportes</h5>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="card mb-3">
+                  <div class="card-body">
+                    <h6>Reporte de Ventas</h6>
+                    <div class="mb-2">
+                      <label class="form-label">Desde</label>
+                      <input type="date" class="form-control" id="reporte-fecha-inicio">
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label">Hasta</label>
+                      <input type="date" class="form-control" id="reporte-fecha-fin">
+                    </div>
+                    <button class="btn btn-primary w-100" id="generar-reporte-ventas">Generar Reporte</button>
+                    <button class="btn btn-success w-100 mt-2" id="descargar-reporte-ventas" style="display:none">Descargar CSV</button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div id="reporte-resultado"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Usuarios (solo admin) -->
+          <div class="tab-pane fade" id="tab-usuarios">
+            <div class="row">
+              <div class="col-md-8">
+                <h5>Gestión de Usuarios</h5>
+                <table class="table table-sm table-striped" id="usuarios-table">
+                  <thead>
+                    <tr><th>#</th><th>Usuario</th><th>RUT</th><th>Email</th><th>Rol</th><th></th></tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="col-md-4">
+                <h5 id="usuario-form-title">Nuevo Usuario</h5>
+                <form id="usuario-form">
+                  <input type="hidden" id="id_usuario_edit">
+                  <div class="mb-2"><input id="user-nombre" class="form-control" placeholder="Usuario" required></div>
+                  <div class="mb-2"><input id="user-rut" class="form-control" placeholder="RUT" required></div>
+                  <div class="mb-2"><input id="user-email" type="email" class="form-control" placeholder="Email" required></div>
+                  <div class="mb-2"><input id="user-password" type="password" class="form-control" placeholder="Contraseña"></div>
+                  <div class="mb-2"><input id="user-telefono" class="form-control" placeholder="Teléfono"></div>
+                  <div class="mb-2">
+                    <select id="user-rol" class="form-select" required>
+                      <option value="">Selecciona rol</option>
+                      <option value="admin">Admin</option>
+                      <option value="operador de ventas">Operador de ventas</option>
+                      <option value="inventario">Inventario</option>
+                    </select>
+                  </div>
+                  <div class="d-flex">
+                    <button type="submit" class="btn btn-primary flex-grow-1">Guardar</button>
+                    <button type="button" class="btn btn-secondary btn-cancelar" id="usuario-cancelar">Cancelar</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para nuevo cliente -->
+    <div class="modal fade" id="nuevoClienteModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Nuevo Cliente</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="cliente-form">
+              <div class="mb-2"><input id="cliente-rut" class="form-control" placeholder="RUT" required></div>
+              <div class="mb-2"><input id="cliente-nombre" class="form-control" placeholder="Nombre" required></div>
+              <div class="mb-2"><input id="cliente-apellido" class="form-control" placeholder="Apellido" required></div>
+              <div class="mb-2"><input id="cliente-telefono" class="form-control" placeholder="Teléfono"></div>
+              <div class="mb-2"><input id="cliente-email" type="email" class="form-control" placeholder="Email" required></div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i>Cancelar</button>
+            <button type="button" class="btn btn-primary" id="guardar-cliente"><i class="fas fa-save me-1"></i>Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal búsqueda de productos -->
+    <div class="modal fade" id="buscarProductoModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-search me-2"></i>Buscar Producto</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <input type="text" class="form-control" id="modal-buscar-producto" placeholder="Buscar por nombre, SKU, talla o color...">
+            </div>
+            <div id="modal-productos-lista" style="max-height: 400px; overflow-y: auto;">
+              <!-- Los productos se cargarán aquí -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal detalle de venta -->
+    <div class="modal fade" id="detalleVentaModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-receipt me-2"></i>Detalle de Venta</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body" id="detalle-venta-content">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
