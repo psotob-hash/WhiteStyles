@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>WhiteStyles — Panel de gestión</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="/styles.css" rel="stylesheet">
@@ -50,9 +53,17 @@
     <div id="main-screen" style="display:none">
       <nav class="navbar navbar-dark">
         <div class="container-fluid">
-          <span class="navbar-brand">
-            <i class="fas fa-shopping-bag me-2"></i>WhiteStyles
-          </span>
+          <div class="d-flex align-items-center">
+            <button class="navbar-toggler me-3" type="button" id="mobile-menu-toggle">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <span class="navbar-brand mb-0" style="cursor: pointer;" id="logo-to-dashboard">
+              <div class="logo-container">
+                <img src="/imgi_1_1.png" alt="WhiteStyle" height="35">
+              </div>
+              <span class="brand-text">WhiteStyle</span>
+            </span>
+          </div>
           <div class="d-flex align-items-center">
             <span class="navbar-text me-3" id="user-info">
               <i class="fas fa-user-circle me-1"></i>
@@ -64,10 +75,32 @@
         </div>
       </nav>
 
+      <!-- Mobile Sidebar -->
+      <div class="mobile-sidebar" id="mobile-sidebar">
+        <div class="mobile-sidebar-content">
+          <div class="mobile-sidebar-header">
+            <div class="logo-container-mobile">
+              <img src="/imgi_1_1.png" alt="WhiteStyle" height="30">
+            </div>
+            <span>WhiteStyle</span>
+            <button class="btn-close btn-close-white" id="mobile-menu-close"></button>
+          </div>
+          <div class="mobile-nav-items" id="mobile-nav-items">
+            <!-- Items se generarán dinámicamente -->
+          </div>
+        </div>
+        <div class="mobile-sidebar-overlay" id="mobile-sidebar-overlay"></div>
+      </div>
+
       <div class="container-fluid">
-        <ul class="nav nav-tabs mb-3" role="tablist" id="main-tabs">
+        <ul class="nav nav-tabs mb-3 desktop-tabs" role="tablist" id="main-tabs">
+          <li class="nav-item" id="tab-dashboard-link">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dashboard">
+              <i class="fas fa-chart-pie me-2"></i>Dashboard
+            </button>
+          </li>
           <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-productos">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-productos">
               <i class="fas fa-box me-2"></i>Productos
             </button>
           </li>
@@ -99,15 +132,140 @@
         </ul>
 
         <div class="tab-content">
+          <!-- Tab Dashboard -->
+          <div class="tab-pane fade show active" id="tab-dashboard">
+            <!-- Filtros de tiempo -->
+            <div class="mb-3">
+              <div class="btn-group btn-group-sm" role="group" id="dashboard-filtros">
+                <button type="button" class="btn btn-outline-primary active" data-periodo="7">Esta Semana</button>
+                <button type="button" class="btn btn-outline-primary" data-periodo="30">Este Mes</button>
+                <button type="button" class="btn btn-outline-primary" data-periodo="90">3 Meses</button>
+                <button type="button" class="btn btn-outline-primary" data-periodo="365">Este Año</button>
+                <button type="button" class="btn btn-outline-primary" data-periodo="all">Todo</button>
+              </div>
+            </div>
+
+            <!-- KPIs Cards -->
+            <div class="row mb-3">
+              <div class="col-md-3 col-sm-6 mb-2">
+                <div class="card dashboard-kpi-card">
+                  <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <p class="text-muted mb-1 small">Total Ventas</p>
+                        <h4 class="mb-0" id="kpi-total-ventas">0</h4>
+                      </div>
+                      <div class="kpi-icon-small" style="background-color: #3498db;">
+                        <i class="fas fa-cash-register"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6 mb-2">
+                <div class="card dashboard-kpi-card">
+                  <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <p class="text-muted mb-1 small">Ingresos</p>
+                        <h4 class="mb-0" id="kpi-ingresos">$0</h4>
+                      </div>
+                      <div class="kpi-icon-small" style="background-color: #2ecc71;">
+                        <i class="fas fa-dollar-sign"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6 mb-2">
+                <div class="card dashboard-kpi-card">
+                  <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <p class="text-muted mb-1 small">Productos Vendidos</p>
+                        <h4 class="mb-0" id="kpi-productos-vendidos">0</h4>
+                      </div>
+                      <div class="kpi-icon-small" style="background-color: #9b59b6;">
+                        <i class="fas fa-box"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6 mb-2">
+                <div class="card dashboard-kpi-card clickable-kpi" id="kpi-clientes-card" style="cursor: pointer;">
+                  <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <p class="text-muted mb-1 small">Clientes Activos</p>
+                        <h4 class="mb-0" id="kpi-clientes">0</h4>
+                      </div>
+                      <div class="kpi-icon-small" style="background-color: #f39c12;">
+                        <i class="fas fa-users"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="row">
+              <div class="col-md-9">
+                <div class="card mb-4">
+                  <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Evolución de Ventas</h6>
+                  </div>
+                  <div class="card-body">
+                    <canvas id="ventasLineChart" height="80"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card mb-4 clickable-kpi" id="stock-bajo-card" style="height: 320px; cursor: pointer;">
+                  <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Stock Bajo</h6>
+                  </div>
+                  <div class="card-body text-center py-2 d-flex align-items-center justify-content-center">
+                    <canvas id="stockDoughnutChart" style="max-height: 200px;"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-trophy me-2"></i>Productos Más Vendidos</h6>
+                  </div>
+                  <div class="card-body">
+                    <canvas id="productosBarChart" height="40"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Tab Productos -->
-          <div class="tab-pane fade show active" id="tab-productos">
+          <div class="tab-pane fade" id="tab-productos">
             <div class="row">
               <div class="col-md-8">
                 <h5><i class="fas fa-box me-2 text-primary"></i>Listado de Productos</h5>
                 <div class="table-responsive">
                   <table class="table table-sm table-striped" id="productos-table">
                     <thead class="sticky-top bg-white">
-                      <tr><th>#</th><th>Nombre</th><th>SKU</th><th>Talla</th><th>Color</th><th>Precio</th><th>Stock</th><th>Proveedor</th><th></th></tr>
+                      <tr>
+                        <th>#</th>
+                        <th class="sortable" data-column="nombre">Nombre <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-column="SKU">SKU <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-column="talla">Talla <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-column="color">Color <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-column="precio_venta">Precio <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-column="stock">Stock <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-column="id_proveedor">Proveedor <i class="fas fa-sort sort-icon"></i></th>
+                        <th></th>
+                      </tr>
                     </thead>
                     <tbody></tbody>
                   </table>
@@ -142,19 +300,24 @@
             <div class="row">
               <div class="col-md-8">
                 <h5>Proveedores</h5>
-                <table class="table table-sm table-striped" id="proveedores-table">
-                  <thead>
-                    <tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th></th></tr>
-                  </thead>
-                  <tbody></tbody>
-                </table>
+                <div class="table-responsive">
+                  <table class="table table-sm table-striped" id="proveedores-table">
+                    <thead class="sticky-top bg-white">
+                      <tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th></th></tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
               </div>
               <div class="col-md-4">
                 <h5 id="proveedor-form-title">Nuevo Proveedor</h5>
                 <form id="proveedor-form">
                   <input type="hidden" id="id_proveedor_edit">
                   <div class="mb-2"><input id="prov-nombre" class="form-control" placeholder="Nombre" required></div>
-                  <div class="mb-2"><input id="prov-telefono" class="form-control" placeholder="Teléfono" required></div>
+                  <div class="mb-2">
+                    <input id="prov-telefono" class="form-control" placeholder="Teléfono (obligatorio)" 
+                           pattern="[0-9]{8,9}" title="Debe contener entre 8 y 9 dígitos" required>
+                  </div>
                   <div class="mb-2"><input id="prov-email" type="email" class="form-control" placeholder="Email" required></div>
                   <div class="d-flex">
                     <button type="submit" class="btn btn-primary flex-grow-1">Guardar</button>
@@ -173,7 +336,14 @@
                 <div class="table-responsive">
                   <table class="table table-sm table-striped" id="ventas-table">
                     <thead class="sticky-top bg-white">
-                      <tr><th>#</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Método</th><th></th></tr>
+                      <tr>
+                        <th>#</th>
+                        <th class="sortable" data-column="fecha_venta">Fecha <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-column="cliente">Cliente <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-column="total_venta">Total <i class="fas fa-sort sort-icon"></i></th>
+                        <th class="sortable" data-column="metodo_pago">Método <i class="fas fa-sort sort-icon"></i></th>
+                        <th></th>
+                      </tr>
                     </thead>
                     <tbody></tbody>
                   </table>
@@ -185,7 +355,7 @@
                   <div class="mb-3">
                     <label class="form-label"><i class="fas fa-user me-1"></i>Cliente</label>
                     <div class="input-group mb-2">
-                      <input id="venta-cliente-buscar" class="form-control" placeholder="RUT o Email del cliente">
+                      <input id="venta-cliente-buscar" class="form-control" placeholder="RUT (con guión) o Email del cliente">
                       <button type="button" class="btn btn-primary" id="buscar-cliente"><i class="fas fa-search"></i></button>
                       <button type="button" class="btn btn-success" id="nuevo-cliente"><i class="fas fa-plus"></i></button>
                     </div>
@@ -275,22 +445,30 @@
             <div class="row">
               <div class="col-md-8">
                 <h5>Gestión de Usuarios</h5>
-                <table class="table table-sm table-striped" id="usuarios-table">
-                  <thead>
-                    <tr><th>#</th><th>Usuario</th><th>RUT</th><th>Email</th><th>Rol</th><th></th></tr>
-                  </thead>
-                  <tbody></tbody>
-                </table>
+                <div class="table-responsive">
+                  <table class="table table-sm table-striped" id="usuarios-table">
+                    <thead class="sticky-top bg-white">
+                      <tr><th>#</th><th>Usuario</th><th>RUT</th><th>Email</th><th>Rol</th><th></th></tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
               </div>
               <div class="col-md-4">
                 <h5 id="usuario-form-title">Nuevo Usuario</h5>
                 <form id="usuario-form">
                   <input type="hidden" id="id_usuario_edit">
                   <div class="mb-2"><input id="user-nombre" class="form-control" placeholder="Usuario" required></div>
-                  <div class="mb-2"><input id="user-rut" class="form-control" placeholder="RUT" required></div>
+                  <div class="mb-2">
+                    <input id="user-rut" class="form-control" placeholder="RUT con guión y sin puntos (ej: 12345678-9)" 
+                           pattern="[0-9]{7,8}-[0-9Kk]{1}" title="Formato: 12345678-9 o 1234567-K" required>
+                  </div>
                   <div class="mb-2"><input id="user-email" type="email" class="form-control" placeholder="Email" required></div>
                   <div class="mb-2"><input id="user-password" type="password" class="form-control" placeholder="Contraseña"></div>
-                  <div class="mb-2"><input id="user-telefono" class="form-control" placeholder="Teléfono"></div>
+                  <div class="mb-2">
+                    <input id="user-telefono" class="form-control" placeholder="Teléfono (opcional)" 
+                           pattern="[0-9]{8,9}" title="Debe contener entre 8 y 9 dígitos">
+                  </div>
                   <div class="mb-2">
                     <select id="user-rol" class="form-select" required>
                       <option value="">Selecciona rol</option>
@@ -321,10 +499,16 @@
           </div>
           <div class="modal-body">
             <form id="cliente-form">
-              <div class="mb-2"><input id="cliente-rut" class="form-control" placeholder="RUT" required></div>
+              <div class="mb-2">
+                <input id="cliente-rut" class="form-control" placeholder="RUT con guión y sin puntos (ej: 12345678-9)" 
+                       pattern="[0-9]{7,8}-[0-9Kk]{1}" title="Formato: 12345678-9 o 1234567-K" required>
+              </div>
               <div class="mb-2"><input id="cliente-nombre" class="form-control" placeholder="Nombre" required></div>
               <div class="mb-2"><input id="cliente-apellido" class="form-control" placeholder="Apellido" required></div>
-              <div class="mb-2"><input id="cliente-telefono" class="form-control" placeholder="Teléfono"></div>
+              <div class="mb-2">
+                <input id="cliente-telefono" class="form-control" placeholder="Teléfono (opcional)" 
+                       pattern="[0-9]{8,9}" title="Debe contener entre 8 y 9 dígitos">
+              </div>
               <div class="mb-2"><input id="cliente-email" type="email" class="form-control" placeholder="Email" required></div>
             </form>
           </div>
@@ -356,7 +540,7 @@
       </div>
     </div>
 
-    <!-- Modal detalle de venta -->
+    <!-- Modal: Detalle de Venta -->
     <div class="modal fade" id="detalleVentaModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -370,7 +554,110 @@
       </div>
     </div>
 
+    <!-- Modal: Lista de Clientes -->
+    <div class="modal fade" id="clientesModal" tabindex="-1">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-users me-2"></i>Lista de Clientes</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <span class="badge bg-success me-2">
+                    <i class="fas fa-circle"></i> Activos (compras en últimos 30 días)
+                  </span>
+                  <span class="badge bg-secondary">
+                    <i class="fas fa-circle"></i> Inactivos (sin compras en 30 días)
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>RUT</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Última Compra</th>
+                    <th>Total Compras</th>
+                  </tr>
+                </thead>
+                <tbody id="clientes-modal-tbody">
+                  <tr>
+                    <td colspan="7" class="text-center">
+                      <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Stock Bajo -->
+    <div class="modal fade" id="stockBajoModal" tabindex="-1">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Productos con Stock Bajo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <span class="badge me-2" style="background-color: #e74c3c; color: white;">
+                    <i class="fas fa-circle"></i> Sin Stock (0)
+                  </span>
+                  <span class="badge me-2" style="background-color: #f39c12; color: white;">
+                    <i class="fas fa-circle"></i> Crítico (1-5)
+                  </span>
+                  <span class="badge" style="background-color: #f1c40f; color: #1a1a1a;">
+                    <i class="fas fa-circle"></i> Bajo (6-10)
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Estado</th>
+                    <th>SKU</th>
+                    <th>Nombre</th>
+                    <th>Talla</th>
+                    <th>Color</th>
+                    <th>Stock</th>
+                  </tr>
+                </thead>
+                <tbody id="stock-modal-tbody">
+                  <tr>
+                    <td colspan="6" class="text-center">
+                      <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
