@@ -62,36 +62,7 @@ Sistema integral de gestión para la tienda de pantalones WhiteStyles, con base 
 - Node.js >= 14
 - Navegador moderno (Chrome, Firefox, Edge)
 
-## 🚀 Instalación y Ejecución
-
-```powershell
-# Navegar a la carpeta del proyecto
-cd 'c:/Users/Payiyu/Documents/1 PROGRAMASION/WhiteStyles/PrototipoCuatro'
-
-# Instalar dependencias
-npm install
-
-# Iniciar servidor
-npm start
-```
-
-Después de `npm start`, abre tu navegador en: **http://localhost:3000**
-
 ## 📱 Guía de Uso
-
-### Primera Vez
-
-1. **Registrar usuario administrador**
-   - Click en "Registrarse"
-   - Completa los datos
-   - Selecciona rol "Admin"
-   - Click en "Registrarse"
-
-2. **Iniciar sesión**
-   - Ingresa tu usuario y contraseña
-   - Click en "Ingresar"
-
-### Flujo de Trabajo Recomendado
 
 1. **Configuración inicial (Admin)**
    - Tab **Proveedores**: Crear proveedores
@@ -218,25 +189,20 @@ Después de `npm start`, abre tu navegador en: **http://localhost:3000**
 - Bootstrap 5.3 (UI responsiva)
 - Fetch API (comunicación con backend)
 - Modales y notificaciones dinámicas
+- chartjs
 
 ## 📊 Próximas Mejoras Sugeridas
 
 - [ ] Módulo de pedidos a proveedores (`PedidoProveedor`)
-- [ ] Gestión de devoluciones y cambios
-- [ ] Dashboard con gráficos (Chart.js)
+- [✔] Gestión de devoluciones y cambios
+- [✔] Dashboard con gráficos (Chart.js)
 - [ ] Exportar reportes en PDF
-- [ ] Sistema de categorías para productos
+- [✔] Sistema de categorías para productos
 - [ ] Código de barras/QR para productos
 - [ ] Integración con sistemas de pago
 - [ ] Respaldo automático de base de datos
 - [ ] Multi-sucursal
 - [ ] App móvil (PWA)
-
-## 🐛 Notas Técnicas
-
-- **sql.js vs better-sqlite3**: Se usa sql.js porque no requiere compilación nativa (sin problemas de Python/Visual Studio en Windows). La DB se guarda automáticamente en disco después de cada operación.
-- **JWT Secret**: Por defecto usa `whitestyles-secret-dev-2024`. En producción configurar con variable de entorno `JWT_SECRET`.
-- **Umbral de alertas**: Hardcodeado en 5 unidades. Se puede hacer configurable por producto.
 
 ## 📞 Soporte
 
