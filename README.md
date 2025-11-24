@@ -64,6 +64,7 @@ Sistema integral de gestión para la tienda de pantalones WhiteStyles, con base 
 
 ## 📱 Guía de Uso
 
+<<<<<<< HEAD
 ### Primera Vez
 
 1. **Iniciar sesión**
@@ -72,6 +73,8 @@ Sistema integral de gestión para la tienda de pantalones WhiteStyles, con base 
 
 ### Flujo de Trabajo Recomendado
 
+=======
+>>>>>>> 579e341d880b9927a77b8388353e37fcc3bafc91
 1. **Configuración inicial (Admin)**
    - Tab **Proveedores**: Crear proveedores
    - Tab **Productos**: Crear catálogo de productos
@@ -197,21 +200,25 @@ Sistema integral de gestión para la tienda de pantalones WhiteStyles, con base 
 - Bootstrap 5.3 (UI responsiva)
 - Fetch API (comunicación con backend)
 - Modales y notificaciones dinámicas
+- chartjs
 
 ## 📊 Próximas Mejoras Sugeridas
 
 - [ ] Módulo de pedidos a proveedores (`PedidoProveedor`)
-- [ ] Gestión de devoluciones y cambios
-- [ ] Dashboard con gráficos (Chart.js)
+- [✔] Gestión de devoluciones y cambios
+- [✔] Dashboard con gráficos (Chart.js)
 - [ ] Exportar reportes en PDF
-- [ ] Sistema de categorías para productos
+- [✔] Sistema de categorías para productos
 - [ ] Código de barras/QR para productos
 - [ ] Integración con sistemas de pago
 - [ ] Respaldo automático de base de datos
 - [ ] Multi-sucursal
 - [ ] App móvil (PWA)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 579e341d880b9927a77b8388353e37fcc3bafc91
 ## 📞 Soporte
 
 Para reportar problemas o sugerencias, contactar al equipo de desarrollo.
