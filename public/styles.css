@@ -127,6 +127,12 @@ body {
   border: none;
 }
 
+#login-screen .btn-primary::before,
+#login-screen .btn-primary::after {
+  display: none !important;
+  content: none !important;
+}
+
 #login-screen .btn-primary:hover {
   background: linear-gradient(135deg, #2980b9, #21618c);
   transform: none !important;
