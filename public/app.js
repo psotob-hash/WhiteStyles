@@ -116,19 +116,27 @@ function showNotification(message, type = 'warning', onResolve = null) {
   popup.innerHTML = `
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     <div>${message}</div>
-    ${onResolve ? '<button class="btn btn-sm btn-success mt-2" id="' + id + '-resolve">Ir a Productos</button>' : ''}
+    ${onResolve ? '<button class="btn btn-sm btn-success mt-2 resolve-btn">Ir a Productos</button>' : ''}
   `;
   
   container.appendChild(popup);
   
   if (onResolve) {
-    document.getElementById(id + '-resolve').addEventListener('click', () => {
-      onResolve();
-      popup.remove();
-    });
+    const resolveBtn = popup.querySelector('.resolve-btn');
+    if (resolveBtn) {
+      resolveBtn.addEventListener('click', () => {
+        onResolve();
+        popup.remove();
+      });
+    }
   }
   
-  setTimeout(() => popup.remove(), 10000);
+  // Auto-cerrar después de 10 segundos
+  setTimeout(() => {
+    if (popup.parentElement) {
+      popup.remove();
+    }
+  }, 10000);
 }
 
 // Login/Register
@@ -199,7 +207,14 @@ function configurarMenuMovil() {
     
     const item = document.createElement('div');
     item.className = 'mobile-nav-item' + (index === 0 ? ' active' : '');
-    item.innerHTML = `<i class="${icon}"></i><span>${text}</span>`;
+    
+    // Si es la pestaña de alertas, agregar el badge
+    if (target === '#tab-alertas') {
+      item.innerHTML = `<i class="${icon}"></i><span>${text}</span><span class="badge bg-danger rounded-pill ms-2" id="alertas-badge-mobile" style="display: none;">0</span>`;
+    } else {
+      item.innerHTML = `<i class="${icon}"></i><span>${text}</span>`;
+    }
+    
     item.setAttribute('data-target', target);
     
     item.addEventListener('click', () => {
@@ -966,6 +981,25 @@ document.getElementById('venta-form').addEventListener('submit', async (e) => {
 async function renderAlertas() {
   const rows = await api.alertas.list();
   const div = document.getElementById('alertas-list');
+  
+  // Actualizar badge de alertas
+  const badge = document.getElementById('alertas-badge');
+  const badgeMobile = document.getElementById('alertas-badge-mobile');
+  
+  if (rows.length > 0) {
+    if (badge) {
+      badge.textContent = rows.length;
+      badge.style.display = 'inline-block';
+    }
+    if (badgeMobile) {
+      badgeMobile.textContent = rows.length;
+      badgeMobile.style.display = 'inline-block';
+    }
+  } else {
+    if (badge) badge.style.display = 'none';
+    if (badgeMobile) badgeMobile.style.display = 'none';
+  }
+  
   if (rows.length === 0) {
     div.innerHTML = '<div class="alert alert-success">No hay alertas activas</div>';
     return;
@@ -1007,7 +1041,21 @@ window.resolverAlerta = async (id) => {
 
 async function checkAlertas() {
   const alertas = await api.alertas.list();
+  
+  // Actualizar badge de alertas
+  const badge = document.getElementById('alertas-badge');
+  const badgeMobile = document.getElementById('alertas-badge-mobile');
+  
   if (alertas.length > 0) {
+    if (badge) {
+      badge.textContent = alertas.length;
+      badge.style.display = 'inline-block';
+    }
+    if (badgeMobile) {
+      badgeMobile.textContent = alertas.length;
+      badgeMobile.style.display = 'inline-block';
+    }
+    
     alertas.forEach(a => {
       showNotification(
         `<strong>⚠️ Stock Bajo</strong><br>${a.nombre} (${a.SKU})<br>Stock: ${a.stock_actual} unidades`,
@@ -1023,6 +1071,9 @@ async function checkAlertas() {
         }
       );
     });
+  } else {
+    if (badge) badge.style.display = 'none';
+    if (badgeMobile) badgeMobile.style.display = 'none';
   }
 }
 
