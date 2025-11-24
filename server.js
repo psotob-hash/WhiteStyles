@@ -18,6 +18,7 @@ app.use('/api/clientes', require('./routes/clientes'));
 app.use('/api/ventas', require('./routes/ventas'));
 app.use('/api/usuarios', require('./routes/usuarios'));
 app.use('/api/reportes', require('./routes/reportes'));
+app.use('/api/dashboard', require('./routes/dashboard'));
 
 // Endpoint legacy de alertas por umbral (mantener compatibilidad)
 const db = require('./db/database');

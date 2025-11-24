@@ -93,6 +93,15 @@ const api = {
     },
     inventario: () => fetch('/api/reportes/inventario', { headers: api.headers() }).then(r => r.json()),
     proveedores: () => fetch('/api/reportes/proveedores', { headers: api.headers() }).then(r => r.json())
+  },
+
+  // Dashboard
+  dashboard: {
+    stats: (periodo) => fetch('/api/dashboard/stats?periodo=' + (periodo || '7'), { headers: api.headers() }).then(r => r.json()),
+    ventasTiempo: (periodo) => fetch('/api/dashboard/ventas-tiempo?periodo=' + (periodo || '7'), { headers: api.headers() }).then(r => r.json()),
+    productosTop: (periodo, limit) => fetch('/api/dashboard/productos-top?periodo=' + (periodo || '7') + '&limit=' + (limit || '10'), { headers: api.headers() }).then(r => r.json()),
+    stockBajo: () => fetch('/api/dashboard/stock-bajo', { headers: api.headers() }).then(r => r.json()),
+    clientesDetalle: () => fetch('/api/dashboard/clientes-detalle', { headers: api.headers() }).then(r => r.json())
   }
 };
 
@@ -163,14 +172,88 @@ function showMainScreen() {
   // Control de acceso por roles
   configurarAccesoPorRol();
   
+  // Configurar menú móvil
+  configurarMenuMovil();
+  
   loadAll();
   checkAlertas();
 }
+
+// ========== MENÚ MÓVIL ==========
+function configurarMenuMovil() {
+  const mobileToggle = document.getElementById('mobile-menu-toggle');
+  const mobileClose = document.getElementById('mobile-menu-close');
+  const mobileSidebar = document.getElementById('mobile-sidebar');
+  const mobileOverlay = document.getElementById('mobile-sidebar-overlay');
+  const mobileNavItems = document.getElementById('mobile-nav-items');
+
+  // Obtener todos los tabs visibles
+  const tabs = document.querySelectorAll('#main-tabs .nav-item:not([style*="display: none"]) button');
+  
+  // Generar items del menú móvil
+  mobileNavItems.innerHTML = '';
+  tabs.forEach((tab, index) => {
+    const target = tab.getAttribute('data-bs-target');
+    const icon = tab.querySelector('i').className;
+    const text = tab.textContent.trim();
+    
+    const item = document.createElement('div');
+    item.className = 'mobile-nav-item' + (index === 0 ? ' active' : '');
+    item.innerHTML = `<i class="${icon}"></i><span>${text}</span>`;
+    item.setAttribute('data-target', target);
+    
+    item.addEventListener('click', () => {
+      // Activar tab
+      tab.click();
+      
+      // Actualizar active
+      document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      
+      // Cerrar sidebar
+      mobileSidebar.classList.remove('active');
+    });
+    
+    mobileNavItems.appendChild(item);
+  });
+
+  // Toggle sidebar
+  mobileToggle?.addEventListener('click', () => {
+    mobileSidebar.classList.add('active');
+  });
+
+  mobileClose?.addEventListener('click', () => {
+    mobileSidebar.classList.remove('active');
+  });
+
+  mobileOverlay?.addEventListener('click', () => {
+    mobileSidebar.classList.remove('active');
+  });
+}
+
+// Click en logo para ir al dashboard
+document.addEventListener('DOMContentLoaded', () => {
+  const logoButton = document.getElementById('logo-to-dashboard');
+  if (logoButton) {
+    logoButton.addEventListener('click', () => {
+      const dashboardTab = document.querySelector('[data-bs-target="#tab-dashboard"]');
+      if (dashboardTab) {
+        dashboardTab.click();
+        // Cerrar sidebar móvil si está abierto
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        if (mobileSidebar) {
+          mobileSidebar.classList.remove('active');
+        }
+      }
+    });
+  }
+});
 
 function configurarAccesoPorRol() {
   const rol = currentUser.rol;
   
   // Obtener todos los tabs
+  const tabDashboard = document.querySelector('[data-bs-target="#tab-dashboard"]').parentElement;
   const tabProductos = document.querySelector('[data-bs-target="#tab-productos"]').parentElement;
   const tabProveedores = document.querySelector('[data-bs-target="#tab-proveedores"]').parentElement;
   const tabVentas = document.querySelector('[data-bs-target="#tab-ventas"]').parentElement;
@@ -179,6 +262,7 @@ function configurarAccesoPorRol() {
   const tabUsuarios = document.getElementById('tab-usuarios-link');
   
   // Ocultar todos por defecto
+  tabDashboard.style.display = 'none';
   tabProductos.style.display = 'none';
   tabProveedores.style.display = 'none';
   tabVentas.style.display = 'none';
@@ -188,6 +272,7 @@ function configurarAccesoPorRol() {
   
   if (rol === 'admin') {
     // Admin ve todo
+    tabDashboard.style.display = 'block';
     tabProductos.style.display = 'block';
     tabProveedores.style.display = 'block';
     tabVentas.style.display = 'block';
@@ -195,28 +280,34 @@ function configurarAccesoPorRol() {
     tabReportes.style.display = 'block';
     tabUsuarios.style.display = 'block';
   } else if (rol === 'inventario') {
-    // Inventario ve: Productos, Proveedores, Alertas
+    // Inventario ve: Dashboard (solo stock), Productos, Proveedores, Alertas
+    tabDashboard.style.display = 'block';
     tabProductos.style.display = 'block';
     tabProveedores.style.display = 'block';
     tabAlertas.style.display = 'block';
-    // Activar tab de productos por defecto
-    document.querySelector('[data-bs-target="#tab-productos"]').click();
   } else if (rol === 'operador de ventas') {
-    // Operador de ventas ve: Ventas, Reportes
+    // Operador de ventas ve: Dashboard, Ventas, Reportes
+    tabDashboard.style.display = 'block';
     tabVentas.style.display = 'block';
     tabReportes.style.display = 'block';
-    // Activar tab de ventas por defecto
-    document.querySelector('[data-bs-target="#tab-ventas"]').click();
   }
 }
 
 // Productos
+let productosData = [];
+let productosSortState = { column: null, direction: 'none' };
+
 async function renderProductos() {
-  const rows = await api.productos.list();
+  productosData = await api.productos.list();
+  renderProductosTable(productosData);
+}
+
+function renderProductosTable(rows) {
   const tbody = document.querySelector('#productos-table tbody');
   tbody.innerHTML = '';
   rows.forEach(r => {
     const tr = document.createElement('tr');
+    tr.setAttribute('data-sku', r.SKU);
     tr.innerHTML = `
       <td>${r.id_producto}</td>
       <td>${r.nombre}</td>
@@ -234,6 +325,72 @@ async function renderProductos() {
     tbody.appendChild(tr);
   });
 }
+
+// Ordenar productos
+document.querySelector('#productos-table thead').addEventListener('click', (e) => {
+  const th = e.target.closest('th.sortable');
+  if (!th) return;
+  
+  const column = th.dataset.column;
+  
+  // Actualizar estado de ordenamiento
+  if (productosSortState.column === column) {
+    // Cambiar dirección: asc -> desc -> none (reset)
+    if (productosSortState.direction === 'asc') {
+      productosSortState.direction = 'desc';
+    } else if (productosSortState.direction === 'desc') {
+      productosSortState.direction = 'none';
+      productosSortState.column = null;
+    } else {
+      productosSortState.direction = 'asc';
+    }
+  } else {
+    productosSortState.column = column;
+    productosSortState.direction = 'asc';
+  }
+  
+  // Actualizar iconos
+  document.querySelectorAll('#productos-table thead th.sortable').forEach(header => {
+    header.classList.remove('active');
+    const icon = header.querySelector('.sort-icon');
+    icon.className = 'fas fa-sort sort-icon';
+  });
+  
+  // Si no hay ordenamiento, mostrar datos originales
+  if (productosSortState.direction === 'none') {
+    renderProductosTable(productosData);
+    return;
+  }
+  
+  th.classList.add('active');
+  const icon = th.querySelector('.sort-icon');
+  if (productosSortState.direction === 'asc') {
+    icon.className = 'fas fa-sort-up sort-icon';
+  } else if (productosSortState.direction === 'desc') {
+    icon.className = 'fas fa-sort-down sort-icon';
+  }
+  
+  // Ordenar datos
+  const sorted = [...productosData].sort((a, b) => {
+    let valA = a[column];
+    let valB = b[column];
+    
+    // Conversión según tipo de columna
+    if (column === 'precio_venta' || column === 'stock' || column === 'id_proveedor') {
+      valA = Number(valA);
+      valB = Number(valB);
+    } else if (typeof valA === 'string') {
+      valA = valA.toLowerCase();
+      valB = valB.toLowerCase();
+    }
+    
+    if (valA < valB) return productosSortState.direction === 'asc' ? -1 : 1;
+    if (valA > valB) return productosSortState.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  renderProductosTable(sorted);
+});
 
 document.querySelector('#productos-table tbody').addEventListener('click', async (e) => {
   const btn = e.target.closest('button');
@@ -378,7 +535,11 @@ function resetProveedorForm() {
 
 // Ventas
 async function renderVentas() {
-  const rows = await api.ventas.list();
+  ventasData = await api.ventas.list();
+  renderVentasTable(ventasData);
+}
+
+function renderVentasTable(rows) {
   const tbody = document.querySelector('#ventas-table tbody');
   tbody.innerHTML = '';
   rows.forEach(r => {
@@ -395,6 +556,82 @@ async function renderVentas() {
     tbody.appendChild(tr);
   });
 }
+
+// Ordenar ventas
+let ventasData = [];
+let ventasSortState = { column: null, direction: 'none' };
+
+document.querySelector('#ventas-table thead').addEventListener('click', (e) => {
+  const th = e.target.closest('th.sortable');
+  if (!th) return;
+  
+  const column = th.dataset.column;
+  
+  // Actualizar estado de ordenamiento
+  if (ventasSortState.column === column) {
+    // Cambiar dirección: asc -> desc -> none (reset)
+    if (ventasSortState.direction === 'asc') {
+      ventasSortState.direction = 'desc';
+    } else if (ventasSortState.direction === 'desc') {
+      ventasSortState.direction = 'none';
+      ventasSortState.column = null;
+    } else {
+      ventasSortState.direction = 'asc';
+    }
+  } else {
+    ventasSortState.column = column;
+    ventasSortState.direction = 'asc';
+  }
+  
+  // Actualizar iconos
+  document.querySelectorAll('#ventas-table thead th.sortable').forEach(header => {
+    header.classList.remove('active');
+    const icon = header.querySelector('.sort-icon');
+    icon.className = 'fas fa-sort sort-icon';
+  });
+  
+  // Si no hay ordenamiento, mostrar datos originales
+  if (ventasSortState.direction === 'none') {
+    renderVentasTable(ventasData);
+    return;
+  }
+  
+  th.classList.add('active');
+  const icon = th.querySelector('.sort-icon');
+  if (ventasSortState.direction === 'asc') {
+    icon.className = 'fas fa-sort-up sort-icon';
+  } else if (ventasSortState.direction === 'desc') {
+    icon.className = 'fas fa-sort-down sort-icon';
+  }
+  
+  // Ordenar datos
+  const sorted = [...ventasData].sort((a, b) => {
+    let valA, valB;
+    
+    if (column === 'fecha_venta') {
+      valA = new Date(a.fecha_venta);
+      valB = new Date(b.fecha_venta);
+    } else if (column === 'cliente') {
+      valA = `${a.nombre} ${a.apellido}`.toLowerCase();
+      valB = `${b.nombre} ${b.apellido}`.toLowerCase();
+    } else if (column === 'total_venta') {
+      valA = Number(a.total_venta);
+      valB = Number(b.total_venta);
+    } else if (column === 'metodo_pago') {
+      valA = a.metodo_pago.toLowerCase();
+      valB = b.metodo_pago.toLowerCase();
+    } else {
+      valA = a[column];
+      valB = b[column];
+    }
+    
+    if (valA < valB) return ventasSortState.direction === 'asc' ? -1 : 1;
+    if (valA > valB) return ventasSortState.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  renderVentasTable(sorted);
+});
 
 document.querySelector('#ventas-table tbody').addEventListener('click', async (e) => {
   const btn = e.target.closest('button');
@@ -638,12 +875,12 @@ function renderProductosVenta() {
             <small class="text-muted">Máx: ${p.stock_disponible}</small>
           </div>
           <div class="col-6">
-            <label class="form-label small mb-1">Descuento $</label>
-            <input type="number" class="form-control form-control-sm" placeholder="0" value="${p.descuento}" min="0" data-idx="${idx}" data-field="descuento">
+            <label class="form-label small mb-1">Descuento %</label>
+            <input type="number" class="form-control form-control-sm" placeholder="0" value="${p.descuento}" min="0" max="100" data-idx="${idx}" data-field="descuento">
           </div>
         </div>
         <div class="mt-2 text-end">
-          <strong>Subtotal: $${((p.precio_unitario_venta * p.cantidad) - p.descuento).toLocaleString()}</strong>
+          <strong>Subtotal: $${((p.precio_unitario_venta * p.cantidad) * (1 - p.descuento / 100)).toLocaleString()}</strong>
         </div>
       </div>
     </div>
@@ -663,7 +900,7 @@ document.getElementById('productos-venta').addEventListener('input', (e) => {
   if (field === 'cantidad') {
     productosVenta[idx].cantidad = Math.min(value, productosVenta[idx].stock_disponible);
   } else if (field === 'descuento') {
-    productosVenta[idx].descuento = value;
+    productosVenta[idx].descuento = Math.min(Math.max(value, 0), 100);
   }
   
   calcularTotalVenta();
@@ -680,7 +917,7 @@ document.getElementById('productos-venta').addEventListener('click', (e) => {
 
 function calcularTotalVenta() {
   const total = productosVenta.reduce((sum, p) => {
-    return sum + (p.precio_unitario_venta * p.cantidad) - p.descuento;
+    return sum + (p.precio_unitario_venta * p.cantidad) * (1 - p.descuento / 100);
   }, 0);
   
   document.getElementById('venta-total').textContent = total.toLocaleString();
@@ -702,7 +939,7 @@ document.getElementById('venta-form').addEventListener('submit', async (e) => {
       id_producto: p.id_producto,
       cantidad_vendida: p.cantidad,
       precio_unitario_venta: p.precio_unitario_venta,
-      descuento_aplicado: p.descuento
+      descuento_aplicado: (p.precio_unitario_venta * p.cantidad) * (p.descuento / 100)
     }))
   };
   
@@ -740,10 +977,27 @@ async function renderAlertas() {
         Stock actual: ${r.stock_actual} | Umbral: ${r.umbral_minimo} | 
         Creada: ${new Date(r.fecha_creacion).toLocaleDateString()}
       </div>
-      <button class="btn btn-sm btn-success" onclick="resolverAlerta(${r.id_alerta})">Resolver</button>
+      <div>
+        <button class="btn btn-sm btn-primary me-2" onclick="irAProducto('${r.SKU}')">
+          <i class="fas fa-arrow-right me-1"></i>Ir
+        </button>
+        <button class="btn btn-sm btn-warning" onclick="resolverAlerta(${r.id_alerta})">
+          <i class="fas fa-clock me-1"></i>Posponer
+        </button>
+      </div>
     </div>
   `).join('');
 }
+
+window.irAProducto = (sku) => {
+  // Ir a la pestaña de productos
+  document.querySelector('[data-bs-target="#tab-productos"]').click();
+  
+  // Esperar a que se renderice y resaltar el producto
+  setTimeout(() => {
+    resaltarProductoPorSKU(sku);
+  }, 500);
+};
 
 window.resolverAlerta = async (id) => {
   await api.alertas.resolver(id);
@@ -759,7 +1013,13 @@ async function checkAlertas() {
         `<strong>⚠️ Stock Bajo</strong><br>${a.nombre} (${a.SKU})<br>Stock: ${a.stock_actual} unidades`,
         'warning',
         () => {
+          // Ir a la pestaña de productos
           document.querySelector('[data-bs-target="#tab-productos"]').click();
+          
+          // Esperar a que se renderice y resaltar el producto
+          setTimeout(() => {
+            resaltarProductoPorSKU(a.SKU);
+          }, 500);
         }
       );
     });
@@ -956,6 +1216,9 @@ document.getElementById('descargar-reporte-ventas').addEventListener('click', ()
 async function loadAll() {
   const rol = currentUser.rol;
   
+  // Cargar dashboard para todos los roles
+  await loadDashboard();
+  
   if (rol === 'admin') {
     // Admin carga todo
     await renderProveedores();
@@ -971,6 +1234,417 @@ async function loadAll() {
   } else if (rol === 'operador de ventas') {
     // Ventas: Ventas y Reportes
     await renderVentas();
+  }
+}
+
+// ========== DASHBOARD ==========
+let dashboardCharts = {
+  lineChart: null,
+  barChart: null,
+  doughnutChart: null
+};
+
+let dashboardPeriodo = '7'; // Por defecto: última semana
+
+async function loadDashboard() {
+  try {
+    // Cargar todas las métricas en paralelo
+    const [stats, ventasTiempo, productosTop, stockBajo] = await Promise.all([
+      api.dashboard.stats(dashboardPeriodo),
+      api.dashboard.ventasTiempo(dashboardPeriodo),
+      api.dashboard.productosTop(dashboardPeriodo, 10),
+      api.dashboard.stockBajo()
+    ]);
+
+    // Actualizar KPIs
+    document.getElementById('kpi-total-ventas').textContent = stats.totalVentas || 0;
+    document.getElementById('kpi-ingresos').textContent = '$' + (parseInt(stats.ingresos) || 0).toLocaleString();
+    document.getElementById('kpi-productos-vendidos').textContent = stats.productosVendidos || 0;
+    document.getElementById('kpi-clientes').textContent = stats.clientesActivos || 0;
+
+    // Renderizar gráficos
+    renderVentasLineChart(ventasTiempo);
+    renderProductosBarChart(productosTop);
+    renderStockDoughnutChart(stockBajo);
+
+  } catch (err) {
+    console.error('Error cargando dashboard:', err);
+    showNotification('Error al cargar el dashboard', 'danger');
+  }
+}
+
+function renderVentasLineChart(datos) {
+  const ctx = document.getElementById('ventasLineChart');
+  
+  // Destruir gráfico anterior si existe
+  if (dashboardCharts.lineChart) {
+    dashboardCharts.lineChart.destroy();
+  }
+
+  const labels = datos.map(d => {
+    const fecha = new Date(d.fecha);
+    return fecha.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
+  });
+  
+  const ventasData = datos.map(d => d.ventas);
+  const ingresosData = datos.map(d => d.ingresos);
+
+  dashboardCharts.lineChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Ventas',
+          data: ventasData,
+          borderColor: '#3498db',
+          backgroundColor: 'rgba(52, 152, 219, 0.1)',
+          tension: 0.4,
+          fill: true,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Ingresos ($)',
+          data: ingresosData,
+          borderColor: '#2ecc71',
+          backgroundColor: 'rgba(46, 204, 113, 0.1)',
+          tension: 0.4,
+          fill: true,
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.dataset.yAxisID === 'y1') {
+                label += '$' + context.parsed.y.toLocaleString();
+              } else {
+                label += context.parsed.y;
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: {
+            display: true,
+            text: 'Cantidad de Ventas'
+          }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
+            display: true,
+            text: 'Ingresos ($)'
+          },
+          grid: {
+            drawOnChartArea: false
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderProductosBarChart(datos) {
+  const ctx = document.getElementById('productosBarChart');
+  
+  if (dashboardCharts.barChart) {
+    dashboardCharts.barChart.destroy();
+  }
+
+  const labels = datos.map(d => d.nombre);
+  const cantidades = datos.map(d => d.cantidad_vendida);
+  
+  dashboardCharts.barChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Unidades Vendidas',
+        data: cantidades,
+        backgroundColor: [
+          '#3498db',
+          '#2ecc71',
+          '#9b59b6',
+          '#f39c12',
+          '#e74c3c',
+          '#1abc9c',
+          '#34495e',
+          '#16a085',
+          '#27ae60',
+          '#2980b9'
+        ],
+        borderWidth: 0,
+        barThickness: 25,
+        maxBarThickness: 30
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return 'Vendidos: ' + context.parsed.x + ' unidades';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Unidades'
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderStockDoughnutChart(datos) {
+  const ctx = document.getElementById('stockDoughnutChart');
+  
+  if (dashboardCharts.doughnutChart) {
+    dashboardCharts.doughnutChart.destroy();
+  }
+
+  // Agrupar por estado
+  const estados = {
+    'Sin Stock': 0,
+    'Crítico': 0,
+    'Bajo': 0
+  };
+
+  datos.forEach(d => {
+    if (estados[d.estado] !== undefined) {
+      estados[d.estado]++;
+    }
+  });
+
+  dashboardCharts.doughnutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Sin Stock', 'Crítico (1-5)', 'Bajo (6-10)'],
+      datasets: [{
+        data: [estados['Sin Stock'], estados['Crítico'], estados['Bajo']],
+        backgroundColor: ['#e74c3c', '#f39c12', '#f1c40f'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.label + ': ' + context.parsed + ' productos';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Event listeners para filtros de dashboard
+document.getElementById('dashboard-filtros').addEventListener('click', async (e) => {
+  if (e.target.tagName === 'BUTTON') {
+    // Remover clase active de todos los botones
+    document.querySelectorAll('#dashboard-filtros button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    
+    // Agregar clase active al botón clickeado
+    e.target.classList.add('active');
+    
+    // Actualizar período y recargar dashboard
+    dashboardPeriodo = e.target.getAttribute('data-periodo');
+    await loadDashboard();
+  }
+});
+
+// Event listener para KPI de clientes activos
+document.getElementById('kpi-clientes-card').addEventListener('click', async () => {
+  try {
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('clientesModal'));
+    modal.show();
+    
+    // Cargar datos
+    const clientes = await api.dashboard.clientesDetalle();
+    
+    // Renderizar tabla
+    const tbody = document.getElementById('clientes-modal-tbody');
+    
+    if (clientes.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay clientes registrados</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = clientes.map(c => {
+      const esActivo = c.es_activo === 1;
+      const rowClass = esActivo ? 'cliente-activo' : 'cliente-inactivo';
+      const ultimaCompra = c.ultima_compra 
+        ? new Date(c.ultima_compra).toLocaleDateString('es-CL')
+        : 'Sin compras';
+      
+      return `
+        <tr class="${rowClass}">
+          <td>${c.RUT}</td>
+          <td>${c.nombre}</td>
+          <td>${c.apellido}</td>
+          <td>${c.email}</td>
+          <td>${c.telefono || 'N/A'}</td>
+          <td>${ultimaCompra}</td>
+          <td>${c.total_compras || 0}</td>
+        </tr>
+      `;
+    }).join('');
+    
+  } catch (err) {
+    console.error('Error al cargar clientes:', err);
+    alert('Error al cargar la información de clientes');
+  }
+});
+
+// Event listener para gráfico de stock bajo
+document.getElementById('stock-bajo-card').addEventListener('click', async () => {
+  try {
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('stockBajoModal'));
+    modal.show();
+    
+    // Cargar datos
+    const productos = await api.dashboard.stockBajo();
+    
+    // Renderizar tabla
+    const tbody = document.getElementById('stock-modal-tbody');
+    
+    if (productos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay productos con stock bajo</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = productos.map(p => {
+      let badgeStyle = '';
+      let badgeText = '';
+      
+      if (p.estado === 'Sin Stock') {
+        badgeStyle = 'background-color: #e74c3c; color: white;';
+        badgeText = 'Sin Stock';
+      } else if (p.estado === 'Crítico') {
+        badgeStyle = 'background-color: #f39c12; color: white;';
+        badgeText = 'Crítico';
+      } else if (p.estado === 'Bajo') {
+        badgeStyle = 'background-color: #f1c40f; color: #1a1a1a;';
+        badgeText = 'Bajo';
+      }
+      
+      return `
+        <tr class="producto-row-clickable" data-sku="${p.SKU}" style="cursor: pointer;">
+          <td><span class="badge" style="${badgeStyle}">${badgeText}</span></td>
+          <td>${p.SKU}</td>
+          <td>${p.nombre}</td>
+          <td>${p.talla}</td>
+          <td>${p.color}</td>
+          <td><strong>${p.stock}</strong></td>
+        </tr>
+      `;
+    }).join('');
+    
+    // Agregar event listeners a las filas
+    document.querySelectorAll('.producto-row-clickable').forEach(row => {
+      row.addEventListener('click', function() {
+        const sku = this.dataset.sku;
+        
+        // Cerrar el modal
+        bootstrap.Modal.getInstance(document.getElementById('stockBajoModal')).hide();
+        
+        // Ir a la pestaña de productos
+        document.querySelector('[data-bs-target="#tab-productos"]').click();
+        
+        // Esperar a que se renderice la tabla
+        setTimeout(() => {
+          resaltarProductoPorSKU(sku);
+        }, 500);
+      });
+      
+      // Efecto hover
+      row.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#f8f9fa';
+      });
+      
+      row.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '';
+      });
+    });
+    
+  } catch (err) {
+    console.error('Error al cargar productos con stock bajo:', err);
+    alert('Error al cargar la información de stock');
+  }
+});
+
+// Función para resaltar producto por SKU
+function resaltarProductoPorSKU(sku) {
+  // Limpiar resaltados previos
+  document.querySelectorAll('#productos-table tbody tr').forEach(row => {
+    row.classList.remove('producto-resaltado');
+  });
+  
+  // Buscar la fila del producto por data-sku
+  const fila = document.querySelector(`#productos-table tbody tr[data-sku="${sku}"]`);
+  
+  if (fila) {
+    // Agregar clase de resaltado
+    fila.classList.add('producto-resaltado');
+    
+    // Hacer scroll a la fila
+    fila.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Quitar el resaltado después de 5 segundos
+    setTimeout(() => {
+      fila.classList.remove('producto-resaltado');
+    }, 5000);
+  } else {
+    console.warn('No se encontró el producto con SKU:', sku);
   }
 }
 
@@ -1001,6 +1675,120 @@ async function verificarAuth() {
     showLoginScreen();
   }
 }
+
+// ========== VALIDACIONES DE FORMULARIOS ==========
+
+// Validación de RUT chileno
+function validarRUT(rut) {
+  // Remover puntos y guiones, convertir a mayúsculas
+  const rutLimpio = rut.replace(/\./g, '').replace(/-/g, '').toUpperCase();
+  
+  // Verificar formato básico
+  if (!/^[0-9]{7,8}[0-9K]$/.test(rutLimpio)) {
+    return false;
+  }
+  
+  const cuerpo = rutLimpio.slice(0, -1);
+  const dv = rutLimpio.slice(-1);
+  
+  // Calcular dígito verificador
+  let suma = 0;
+  let multiplicador = 2;
+  
+  for (let i = cuerpo.length - 1; i >= 0; i--) {
+    suma += parseInt(cuerpo[i]) * multiplicador;
+    multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+  }
+  
+  const dvCalculado = 11 - (suma % 11);
+  const dvFinal = dvCalculado === 11 ? '0' : dvCalculado === 10 ? 'K' : dvCalculado.toString();
+  
+  return dv === dvFinal;
+}
+
+// Formatear RUT automáticamente (agregar guión)
+function formatearRUT(input) {
+  let valor = input.value.replace(/\./g, '').replace(/-/g, '').toUpperCase();
+  
+  if (valor.length > 1) {
+    const cuerpo = valor.slice(0, -1);
+    const dv = valor.slice(-1);
+    
+    if (valor.length > 1) {
+      input.value = cuerpo + '-' + dv;
+    }
+  }
+}
+
+// Validación de teléfono
+function validarTelefono(telefono) {
+  if (!telefono || telefono.trim() === '') return true; // Opcional
+  return /^[0-9]{8,9}$/.test(telefono);
+}
+
+// Event listeners para validación en tiempo real de RUT
+document.addEventListener('DOMContentLoaded', () => {
+  // Campos de RUT
+  const camposRUT = ['user-rut', 'cliente-rut'];
+  
+  camposRUT.forEach(id => {
+    const input = document.getElementById(id);
+    if (input) {
+      // Formatear al perder el foco
+      input.addEventListener('blur', function() {
+        if (this.value) {
+          formatearRUT(this);
+          
+          // Validar y mostrar feedback
+          if (!validarRUT(this.value)) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+          } else {
+            this.classList.add('is-valid');
+            this.classList.remove('is-invalid');
+          }
+        }
+      });
+      
+      // Limpiar validación al escribir
+      input.addEventListener('input', function() {
+        this.classList.remove('is-invalid', 'is-valid');
+      });
+    }
+  });
+  
+  // Campos de teléfono (solo números)
+  const camposTelefono = ['prov-telefono', 'user-telefono', 'cliente-telefono'];
+  
+  camposTelefono.forEach(id => {
+    const input = document.getElementById(id);
+    if (input) {
+      // Solo permitir números
+      input.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+      });
+      
+      // Validar longitud
+      input.addEventListener('blur', function() {
+        if (this.value && !validarTelefono(this.value)) {
+          this.classList.add('is-invalid');
+          this.classList.remove('is-valid');
+        } else if (this.value) {
+          this.classList.add('is-valid');
+          this.classList.remove('is-invalid');
+        } else {
+          this.classList.remove('is-invalid', 'is-valid');
+        }
+      });
+      
+      input.addEventListener('input', function() {
+        if (!this.value) {
+          this.classList.remove('is-invalid', 'is-valid');
+        }
+      });
+    }
+  });
+});
 
 // Inicialización
 verificarAuth();
