@@ -252,7 +252,13 @@
           <div class="tab-pane fade" id="tab-productos">
             <div class="row">
               <div class="col-md-8">
-                <h5><i class="fas fa-box me-2 text-primary"></i>Listado de Productos</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h5 class="mb-0"><i class="fas fa-box me-2 text-primary"></i>Listado de Productos</h5>
+                  <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="buscar-producto-input" placeholder="Buscar producto...">
+                  </div>
+                </div>
                 <div class="table-responsive">
                   <table class="table table-sm table-striped" id="productos-table">
                     <thead class="sticky-top bg-white">
@@ -333,7 +339,13 @@
           <div class="tab-pane fade" id="tab-ventas">
             <div class="row">
               <div class="col-md-7">
-                <h5>Historial de Ventas</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h5 class="mb-0">Historial de Ventas</h5>
+                  <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="buscar-venta-input" placeholder="Buscar venta...">
+                  </div>
+                </div>
                 <div class="table-responsive">
                   <table class="table table-sm table-striped" id="ventas-table">
                     <thead class="sticky-top bg-white">

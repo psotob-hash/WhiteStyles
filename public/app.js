@@ -1263,6 +1263,46 @@ document.getElementById('descargar-reporte-ventas').addEventListener('click', ()
   a.click();
 });
 
+// Búsqueda de productos
+document.getElementById('buscar-producto-input').addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase().trim();
+  const rows = document.querySelectorAll('#productos-table tbody tr');
+  
+  rows.forEach(row => {
+    const nombre = row.cells[1]?.textContent.toLowerCase() || '';
+    const sku = row.cells[2]?.textContent.toLowerCase() || '';
+    const talla = row.cells[3]?.textContent.toLowerCase() || '';
+    const color = row.cells[4]?.textContent.toLowerCase() || '';
+    
+    const matches = nombre.includes(query) || 
+                   sku.includes(query) || 
+                   talla.includes(query) || 
+                   color.includes(query);
+    
+    row.style.display = matches ? '' : 'none';
+  });
+});
+
+// Búsqueda de ventas
+document.getElementById('buscar-venta-input').addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase().trim();
+  const rows = document.querySelectorAll('#ventas-table tbody tr');
+  
+  rows.forEach(row => {
+    const fecha = row.cells[1]?.textContent.toLowerCase() || '';
+    const cliente = row.cells[2]?.textContent.toLowerCase() || '';
+    const total = row.cells[3]?.textContent.toLowerCase() || '';
+    const metodo = row.cells[4]?.textContent.toLowerCase() || '';
+    
+    const matches = fecha.includes(query) || 
+                   cliente.includes(query) || 
+                   total.includes(query) || 
+                   metodo.includes(query);
+    
+    row.style.display = matches ? '' : 'none';
+  });
+});
+
 // Carga inicial
 async function loadAll() {
   const rol = currentUser.rol;
