@@ -713,7 +713,7 @@ document.querySelector('#ventas-table thead').addEventListener('click', (e) => {
   
   // Si no hay ordenamiento, mostrar datos originales
   if (ventasSortState.direction === 'none') {
-    renderVentasTable(ventasData);
+    aplicarFiltroEstado();
     return;
   }
   
@@ -725,34 +725,129 @@ document.querySelector('#ventas-table thead').addEventListener('click', (e) => {
     icon.className = 'fas fa-sort-down sort-icon';
   }
   
-  // Ordenar datos
-  const sorted = [...ventasData].sort((a, b) => {
-    let valA, valB;
-    
-    if (column === 'fecha_venta') {
-      valA = new Date(a.fecha_venta);
-      valB = new Date(b.fecha_venta);
-    } else if (column === 'cliente') {
-      valA = `${a.nombre} ${a.apellido}`.toLowerCase();
-      valB = `${b.nombre} ${b.apellido}`.toLowerCase();
-    } else if (column === 'total_venta') {
-      valA = Number(a.total_venta);
-      valB = Number(b.total_venta);
-    } else if (column === 'metodo_pago') {
-      valA = a.metodo_pago.toLowerCase();
-      valB = b.metodo_pago.toLowerCase();
-    } else {
-      valA = a[column];
-      valB = b[column];
-    }
-    
-    if (valA < valB) return ventasSortState.direction === 'asc' ? -1 : 1;
-    if (valA > valB) return ventasSortState.direction === 'asc' ? 1 : -1;
-    return 0;
+  // Aplicar filtro (que incluye ordenamiento)
+  aplicarFiltroEstado();
+});
+
+// Filtro de estados
+let estadoFiltroActivo = null;
+
+document.querySelector('.filterable-estado').addEventListener('click', (e) => {
+  e.stopPropagation();
+  
+  // Remover menú existente si hay uno
+  const menuExistente = document.querySelector('.filtro-estado-menu');
+  if (menuExistente) {
+    menuExistente.remove();
+    return;
+  }
+  
+  const th = e.currentTarget;
+  const estados = [
+    { value: null, icon: 'times', texto: 'Todos', color: 'secondary' },
+    { value: 'por imprimir', icon: 'print', texto: 'Por Imprimir', color: 'danger' },
+    { value: 'pendiente', icon: 'clock', texto: 'Pendiente', color: 'warning' },
+    { value: 'en espera', icon: 'pause-circle', texto: 'En Espera', color: 'info' },
+    { value: 'enviado', icon: 'check-circle', texto: 'Enviado', color: 'success' }
+  ];
+  
+  const menu = document.createElement('div');
+  menu.className = 'filtro-estado-menu card shadow-sm';
+  menu.style.cssText = 'position: absolute; z-index: 1050; min-width: 200px;';
+  
+  let menuHTML = '<div class="list-group list-group-flush">';
+  estados.forEach(estado => {
+    const isActive = estadoFiltroActivo === estado.value ? 'active' : '';
+    menuHTML += `
+      <a href="#" class="list-group-item list-group-item-action ${isActive}" data-estado-filtro="${estado.value}">
+        <i class="fas fa-${estado.icon} me-2 text-${estado.color}"></i>${estado.texto}
+        ${isActive ? '<i class="fas fa-check float-end"></i>' : ''}
+      </a>
+    `;
+  });
+  menuHTML += '</div>';
+  
+  menu.innerHTML = menuHTML;
+  
+  // Posicionar el menú
+  const rect = th.getBoundingClientRect();
+  menu.style.top = `${rect.bottom + window.scrollY}px`;
+  menu.style.left = `${rect.left + window.scrollX}px`;
+  
+  document.body.appendChild(menu);
+  
+  // Event listeners para las opciones del menú
+  menu.querySelectorAll('.list-group-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const filtro = item.dataset.estadoFiltro;
+      estadoFiltroActivo = filtro === 'null' ? null : filtro;
+      
+      // Actualizar icono del header
+      const icon = th.querySelector('i');
+      if (estadoFiltroActivo) {
+        icon.className = 'fas fa-filter-circle-xmark ms-1';
+        th.style.color = '#3498db';
+      } else {
+        icon.className = 'fas fa-filter ms-1';
+        th.style.color = '';
+      }
+      
+      // Aplicar filtro
+      aplicarFiltroEstado();
+      menu.remove();
+    });
   });
   
-  renderVentasTable(sorted);
+  // Cerrar menú al hacer click fuera
+  setTimeout(() => {
+    document.addEventListener('click', function cerrarMenuFiltro(e) {
+      if (!menu.contains(e.target) && !th.contains(e.target)) {
+        menu.remove();
+        document.removeEventListener('click', cerrarMenuFiltro);
+      }
+    });
+  }, 100);
 });
+
+function aplicarFiltroEstado() {
+  let datosFiltrados = ventasData;
+  
+  if (estadoFiltroActivo) {
+    datosFiltrados = ventasData.filter(v => v.estado_pedido === estadoFiltroActivo);
+  }
+  
+  // Si hay ordenamiento activo, aplicarlo también
+  if (ventasSortState.column && ventasSortState.direction !== 'none') {
+    const column = ventasSortState.column;
+    datosFiltrados = [...datosFiltrados].sort((a, b) => {
+      let valA, valB;
+      
+      if (column === 'fecha_venta') {
+        valA = new Date(a.fecha_venta);
+        valB = new Date(b.fecha_venta);
+      } else if (column === 'cliente') {
+        valA = `${a.nombre} ${a.apellido}`.toLowerCase();
+        valB = `${b.nombre} ${b.apellido}`.toLowerCase();
+      } else if (column === 'total_venta') {
+        valA = Number(a.total_venta);
+        valB = Number(b.total_venta);
+      } else if (column === 'metodo_pago') {
+        valA = a.metodo_pago.toLowerCase();
+        valB = b.metodo_pago.toLowerCase();
+      } else {
+        valA = a[column];
+        valB = b[column];
+      }
+      
+      if (valA < valB) return ventasSortState.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return ventasSortState.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  
+  renderVentasTable(datosFiltrados);
+}
 
 document.querySelector('#ventas-table tbody').addEventListener('click', async (e) => {
   const btn = e.target.closest('button');
