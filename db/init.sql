@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS Venta (
   fecha_venta DATETIME DEFAULT (datetime('now')),
   total_venta INTEGER NOT NULL,
   metodo_pago TEXT NOT NULL CHECK (metodo_pago IN ('efectivo','tarjeta','transferencia')),
+  estado_pedido TEXT NOT NULL DEFAULT 'por imprimir' CHECK (estado_pedido IN ('por imprimir','pendiente','en espera','enviado')),
   id_cliente INTEGER NOT NULL,
   FOREIGN KEY (id_cliente) REFERENCES Cliente(id_cliente)
 );

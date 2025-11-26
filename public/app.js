@@ -560,16 +560,122 @@ function renderVentasTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement('tr');
     const fecha = new Date(r.fecha_venta).toLocaleString('es-CL');
+    
+    // Función para obtener el badge de estado
+    const getEstadoBadge = (estado) => {
+      const estadosConfig = {
+        'por imprimir': { color: 'danger', icon: 'print', texto: 'Por Imprimir' },
+        'pendiente': { color: 'warning', icon: 'clock', texto: 'Pendiente' },
+        'en espera': { color: 'info', icon: 'pause-circle', texto: 'En Espera' },
+        'enviado': { color: 'success', icon: 'check-circle', texto: 'Enviado' }
+      };
+      const config = estadosConfig[estado] || estadosConfig['por imprimir'];
+      return `<span class="badge bg-${config.color} estado-badge" data-id="${r.id_venta}" data-estado="${estado}" style="cursor: pointer;">
+        <i class="fas fa-${config.icon} me-1"></i>${config.texto} <i class="fas fa-caret-down ms-1"></i>
+      </span>`;
+    };
+    
     tr.innerHTML = `
       <td>${r.id_venta}</td>
       <td>${fecha}</td>
       <td>${r.nombre} ${r.apellido}</td>
       <td>$${r.total_venta.toLocaleString()}</td>
       <td>${r.metodo_pago}</td>
+      <td>${getEstadoBadge(r.estado_pedido || 'por imprimir')}</td>
       <td><button class="btn btn-sm btn-outline-info" data-id="${r.id_venta}" data-action="view">Ver</button></td>
     `;
     tbody.appendChild(tr);
   });
+  
+  // Agregar event listeners para los badges de estado
+  document.querySelectorAll('.estado-badge').forEach(badge => {
+    badge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      mostrarMenuEstado(badge);
+    });
+  });
+}
+
+// Mostrar menú dropdown de estados (estilo Shopify)
+function mostrarMenuEstado(badge) {
+  // Remover menú existente si hay uno
+  const menuExistente = document.querySelector('.estado-dropdown-menu');
+  if (menuExistente) menuExistente.remove();
+  
+  const idVenta = badge.dataset.id;
+  const estadoActual = badge.dataset.estado;
+  
+  const estados = [
+    { value: 'por imprimir', icon: 'print', texto: 'Por Imprimir', color: 'danger' },
+    { value: 'pendiente', icon: 'clock', texto: 'Pendiente', color: 'warning' },
+    { value: 'en espera', icon: 'pause-circle', texto: 'En Espera', color: 'info' },
+    { value: 'enviado', icon: 'check-circle', texto: 'Enviado', color: 'success' }
+  ];
+  
+  const menu = document.createElement('div');
+  menu.className = 'estado-dropdown-menu card shadow-sm';
+  menu.style.cssText = 'position: absolute; z-index: 1050; min-width: 180px;';
+  
+  let menuHTML = '<div class="list-group list-group-flush">';
+  estados.forEach(estado => {
+    const isActive = estado.value === estadoActual ? 'active' : '';
+    menuHTML += `
+      <a href="#" class="list-group-item list-group-item-action ${isActive}" data-estado="${estado.value}" data-id="${idVenta}">
+        <i class="fas fa-${estado.icon} me-2 text-${estado.color}"></i>${estado.texto}
+        ${isActive ? '<i class="fas fa-check float-end"></i>' : ''}
+      </a>
+    `;
+  });
+  menuHTML += '</div>';
+  
+  menu.innerHTML = menuHTML;
+  
+  // Posicionar el menú
+  const rect = badge.getBoundingClientRect();
+  menu.style.top = `${rect.bottom + window.scrollY}px`;
+  menu.style.left = `${rect.left + window.scrollX}px`;
+  
+  document.body.appendChild(menu);
+  
+  // Event listeners para las opciones del menú
+  menu.querySelectorAll('.list-group-item').forEach(item => {
+    item.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const nuevoEstado = item.dataset.estado;
+      const id = item.dataset.id;
+      
+      try {
+        const response = await fetch(`/api/ventas/${id}/estado`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ estado_pedido: nuevoEstado })
+        });
+        
+        if (response.ok) {
+          await renderVentas();
+          menu.remove();
+        } else {
+          alert('Error al actualizar el estado');
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        alert('Error al actualizar el estado');
+      }
+    });
+  });
+  
+  // Cerrar menú al hacer click fuera
+  setTimeout(() => {
+    document.addEventListener('click', function cerrarMenu(e) {
+      if (!menu.contains(e.target)) {
+        menu.remove();
+        document.removeEventListener('click', cerrarMenu);
+      }
+    });
+  }, 100);
 }
 
 // Ordenar ventas

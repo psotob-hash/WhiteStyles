@@ -1045,3 +1045,51 @@ body {
   transition: background-color 0.2s ease;
 }
 
+/* ==================== Dropdown Estados (Estilo Shopify) ==================== */
+.estado-badge {
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  user-select: none;
+}
+
+.estado-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.estado-dropdown-menu {
+  animation: fadeInDown 0.2s ease;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 8px;
+}
+
+.estado-dropdown-menu .list-group-item {
+  border: none;
+  padding: 0.75rem 1rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.estado-dropdown-menu .list-group-item:hover {
+  background-color: #f8f9fa;
+  padding-left: 1.2rem;
+}
+
+.estado-dropdown-menu .list-group-item.active {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-weight: 500;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

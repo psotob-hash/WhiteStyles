@@ -37,7 +37,7 @@ router.get('/:id', (req, res) => {
 
 // Crear venta con detalles
 router.post('/', (req, res) => {
-  const { id_cliente, metodo_pago, detalles } = req.body;
+  const { id_cliente, metodo_pago, detalles, estado_pedido } = req.body;
   
   if (!detalles || detalles.length === 0) {
     return res.status(400).json({ error: 'Debe incluir al menos un producto' });
@@ -51,9 +51,9 @@ router.post('/', (req, res) => {
       total_venta += subtotal;
     });
     
-    // Crear venta
-    const stmtVenta = db.prepare('INSERT INTO Venta (total_venta, metodo_pago, id_cliente) VALUES (?,?,?)');
-    const infoVenta = stmtVenta.run(total_venta, metodo_pago, id_cliente);
+    // Crear venta con estado_pedido (por defecto 'por imprimir')
+    const stmtVenta = db.prepare('INSERT INTO Venta (total_venta, metodo_pago, id_cliente, estado_pedido) VALUES (?,?,?,?)');
+    const infoVenta = stmtVenta.run(total_venta, metodo_pago, id_cliente, estado_pedido || 'por imprimir');
     const id_venta = infoVenta.lastInsertRowid;
     
     console.log('Venta creada con ID:', id_venta);
@@ -117,6 +117,31 @@ router.get('/stats/summary', (req, res) => {
   `).all(...params);
   
   res.json({ ...stats, por_metodo: porMetodo });
+});
+
+// Actualizar estado del pedido
+router.patch('/:id/estado', (req, res) => {
+  const id = Number(req.params.id);
+  const { estado_pedido } = req.body;
+  
+  const estadosValidos = ['por imprimir', 'pendiente', 'en espera', 'enviado'];
+  if (!estadosValidos.includes(estado_pedido)) {
+    return res.status(400).json({ error: 'Estado inválido' });
+  }
+  
+  try {
+    const stmt = db.prepare('UPDATE Venta SET estado_pedido = ? WHERE id_venta = ?');
+    const result = stmt.run(estado_pedido, id);
+    
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Venta no encontrada' });
+    }
+    
+    const ventaActualizada = db.prepare('SELECT * FROM Venta WHERE id_venta = ?').get(id);
+    res.json(ventaActualizada);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 module.exports = router;
